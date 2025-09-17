@@ -109,6 +109,47 @@ curl -x localhost:8080 https://myip.wtf/json
 https://myip.wtf/json
 ```
 
+## Usage with Podman
+
+You can also run everything in a container within podman.
+
+First build the container with:
+
+~~~bash
+podman build -t localhost/cf-proxy . 
+~~~
+
+Configure your personal worker name and secret:
+
+~~~bash
+uuidgen -r > auth_token
+echo "cf-proxy-<YOUR_NAME>" > worker_name.txt
+~~~
+
+Login with your Cloudflare Account:
+
+~~~bash
+podman run --rm -it --network=host -v "$PWD":/workspace localhost/cf-proxy login
+~~~
+
+Deploy your worker:
+
+~~~bash
+podman run --rm -it --network=host -v "$PWD":/workspace localhost/cf-proxy deploy
+~~~
+
+Run a SOCKS Proxy:
+
+~~~bash
+podman run --rm -it --network=host -v "$PWD":/workspace localhost/cf-proxy proxy
+~~~
+
+Delete your worker:
+
+~~~bash
+podman run --rm -it --network=host -v "$PWD":/workspace localhost/cf-proxy undeploy
+~~~
+
 ## Limitations
 
 By default, Cloudflare doesn't allow connections to port 25 of any target. Also, connecting to Cloudflare 

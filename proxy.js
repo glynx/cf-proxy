@@ -51,7 +51,7 @@ const proxyConnect = (target, socket, options) => {
 
 const httpServer = (options) => Bun.listen({
     port: options.port || 8080,
-    hostname: '0.0.0.0',
+    hostname: options.host || '0.0.0.0',
     socket: {
         async data(socket, data) {
             if (!socket.proxy) {
@@ -66,7 +66,7 @@ const httpServer = (options) => Bun.listen({
 
 const socks5Server = (options) => Bun.listen({
     port: options.port || 1080,
-    hostname: '0.0.0.0',
+    hostname: options.host || '0.0.0.0',
     socket: {
         async open(socket) {
             socket.step = 0;
@@ -169,6 +169,9 @@ const parseOptions = (argv) => {
             case '--port':
                 options.port = parseInt(argv[++i]);
                 break;
+            case '--host':
+                options.host = argv[++i];
+                break;
             case '-a':
             case '--auth':
                 options.authorization = argv[++i];
@@ -207,6 +210,7 @@ function main() {
         console.log('')
         console.log('-h, --help         Show this help message and exit');
         console.log('-p, --port         Port to listen on (defaults to 1080 for socks and 8080 for http)');
+        console.log('--host             Interface to listen on (defaults to 0.0.0.0)');
         console.log('-a, --auth         Authorization header');
         console.log('-v, --verbose      Enable verbose mode (default: false)');
         console.log('')
