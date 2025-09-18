@@ -109,6 +109,10 @@ curl -x localhost:8080 https://myip.wtf/json
 https://myip.wtf/json
 ```
 
+## Python Proxy
+
+`proxy.py` implements a more robust proxy written in Python. This handles connection close events correctly and should be more stable. It is used by the container.
+
 ## Usage with Podman
 
 You can also run everything in a container within podman.

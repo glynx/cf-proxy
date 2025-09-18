@@ -114,7 +114,7 @@ cmd_proxy() {
   replace_placeholder_if_present
   [ -f "${WORKDIR}/wrangler.toml" ] || die "wrangler.toml not found in ${WORKDIR}"
   cd ${WORKDIR}/..
-  bun proxy.js -a $(cat $AUTH_TOKEN_FILE) -p 1080 --host 127.0.0.1 socks $(get_worker_name).$(get_workers_subdomain).workers.dev
+  python3 proxy.py socks -a $(cat $AUTH_TOKEN_FILE) -p 1080 --host 127.0.0.1 --worker $(get_worker_name).$(get_workers_subdomain).workers.dev
 }
 
 cmd_get_hostname() {
