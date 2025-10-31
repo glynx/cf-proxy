@@ -195,7 +195,7 @@ cmd_deploy() {
   ensure_ca
   [ -f "${WORKDIR}/wrangler.toml" ] || die "wrangler.toml not found in ${WORKDIR}"
   replace_placeholder_if_present
-  ( cd "$WORKDIR" && wrangler_cmd deploy --verbose )
+  ( cd "$WORKDIR" && wrangler_cmd deploy )
   # Optional: print workers.dev URL
   local name sub
   name="$(get_worker_name || true)"
