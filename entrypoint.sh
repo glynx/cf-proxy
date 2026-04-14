@@ -2,12 +2,12 @@
 set -Eeuo pipefail
 
 # ---------- Defaults (override via env) ----------
-: "${WORKDIR:=/cf-proxy/worker}"                    # your project dir (wrangler.toml lives here)
-: "${WRANGLER_DISABLE_METRICS:=true}"               # avoid telemetry hangs in containers
-: "${WRANGLER_LOG_SANITIZE:=true}"                  # set to false to see headers in logs
-: "${NODE_OPTIONS:=--dns-result-order=ipv4first}"   # IPv4 first helps with odd DNS/IPv6 stalls
-: "${NO_COLOR:=1}"                                  # no spinners/ANSI
-: "${CI:=1}"                                        # non-interactive mode
+: "${WORKDIR:=/cf-proxy/worker}"                  # your project dir (wrangler.toml lives here)
+: "${WRANGLER_DISABLE_METRICS:=true}"             # avoid telemetry hangs in containers
+: "${WRANGLER_LOG_SANITIZE:=true}"                # set to false to see headers in logs
+: "${NODE_OPTIONS:=--dns-result-order=ipv4first}" # IPv4 first helps with odd DNS/IPv6 stalls
+: "${NO_COLOR:=1}"                                # no spinners/ANSI
+: "${CI:=1}"                                      # non-interactive mode
 : "${WRANGLER_SEND_METRICS:=false}"
 
 # optional token substitution before deploy:
@@ -19,12 +19,15 @@ set -Eeuo pipefail
 # CA refresh policy
 : "${CA_BUNDLE:=/etc/ssl/certs/ca-certificates.crt}"
 : "${CA_SYMLINK:=/etc/ssl/cert.pem}"
-: "${CA_REFRESH_DAYS:=7}"                           # refresh if bundle older than N days
+: "${CA_REFRESH_DAYS:=7}" # refresh if bundle older than N days
 : "${SSL_CERT_FILE:=${CA_BUNDLE}}"
 
 # ---------- Helpers ----------
-msg()  { printf '%s\n' "$*" >&2; }
-die()  { msg "ERROR: $*"; exit 1; }
+msg() { printf '%s\n' "$*" >&2; }
+die() {
+  msg "ERROR: $*"
+  exit 1
+}
 
 need() {
   command -v "$1" >/dev/null 2>&1 || die "Missing dependency '$1'. Install it in the image."
@@ -145,14 +148,14 @@ get_workers_subdomain() {
 
   sub="$(
     curl -fsS -H "Authorization: Bearer $access" \
-      "https://api.cloudflare.com/client/v4/accounts/$acc/workers/subdomain" \
-    | jq -r '.result.subdomain'
+      "https://api.cloudflare.com/client/v4/accounts/$acc/workers/subdomain" |
+      jq -r '.result.subdomain'
   )"
 
   # 3) Validate and store in cache
   [ -n "$sub" ] || die "Cloudflare API returned empty subdomain"
-  printf '%s' "$sub" | grep -Eq '^[a-z0-9-]+$' \
-    || die "Cloudflare API returned unexpected subdomain: '$sub'"
+  printf '%s' "$sub" | grep -Eq '^[a-z0-9-]+$' ||
+    die "Cloudflare API returned unexpected subdomain: '$sub'"
 
   mkdir -p "$cache_dir"
   if ! printf '%s\n' "$sub" >"$cache_file"; then
@@ -185,7 +188,7 @@ cmd_login() {
   ensure_ca
   mkdir -p "${XDG_CONFIG_HOME}/.wrangler/config"
   msg "Starting interactive OAuth login..."
-  wrangler_cmd login
+  wrangler_cmd login --browser false
   msg "Login complete."
   msg "Whoami:"
   wrangler_cmd whoami || true
@@ -195,7 +198,7 @@ cmd_deploy() {
   ensure_ca
   [ -f "${WORKDIR}/wrangler.toml" ] || die "wrangler.toml not found in ${WORKDIR}"
   replace_placeholder_if_present
-  ( cd "$WORKDIR" && wrangler_cmd deploy )
+  (cd "$WORKDIR" && wrangler_cmd deploy)
   # Optional: print workers.dev URL
   local name sub
   name="$(get_worker_name || true)"
@@ -209,7 +212,7 @@ cmd_undeploy() {
   ensure_ca
   replace_placeholder_if_present
   [ -f "${WORKDIR}/wrangler.toml" ] || die "wrangler.toml not found in ${WORKDIR}"
-  ( cd "$WORKDIR" && wrangler_cmd delete )
+  (cd "$WORKDIR" && wrangler_cmd delete)
 }
 
 cmd_proxy() {
@@ -241,11 +244,27 @@ export WRANGLER_SEND_METRICS
 export SSL_CERT_FILE
 
 case "$SUBCMD" in
-  login)        shift; cmd_login "$@";;
-  deploy)       shift; cmd_deploy "$@";;
-  undeploy)     shift; cmd_undeploy "$@";;
-  proxy)        shift; cmd_proxy "$@";;
-  get-hostname) shift; cmd_get_hostname "$@";;
-  ""|help|-h|--help) print_help ;;
-  *) die "Unknown subcommand: ${SUBCMD}. Run with no args for help." ;;
+login)
+  shift
+  cmd_login "$@"
+  ;;
+deploy)
+  shift
+  cmd_deploy "$@"
+  ;;
+undeploy)
+  shift
+  cmd_undeploy "$@"
+  ;;
+proxy)
+  shift
+  cmd_proxy "$@"
+  ;;
+get-hostname)
+  shift
+  cmd_get_hostname "$@"
+  ;;
+"" | help | -h | --help) print_help ;;
+*) die "Unknown subcommand: ${SUBCMD}. Run with no args for help." ;;
 esac
+
