@@ -1,9 +1,21 @@
-FROM oven/bun:alpine
+FROM node:22-alpine
 
-# get wrangler for cloudflare workes
-RUN apk add --no-cache ca-certificates curl bash jq python3 py3-websockets npm >/dev/null && update-ca-certificates 
-ENV BUN_INSTALL=/usr/local
-RUN bun i -g wrangler && which wrangler && wrangler -v
+# install necessary packages
+RUN apk add --no-cache \
+    ca-certificates \
+    curl \
+    bash \
+    jq \
+    python3 \
+    py3-websockets \
+  && update-ca-certificates
+
+# install bun + wrangler
+RUN npm install -g bun wrangler \
+  && node -v \
+  && bun -v \
+  && which wrangler \
+  && wrangler -v
 
 # copy files for worker
 RUN mkdir /cf-proxy
